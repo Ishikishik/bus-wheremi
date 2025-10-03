@@ -3,7 +3,7 @@
 #include "library.hpp"
 
 // SoftwareSerialのインスタンス作成
-SoftwareSerial mySerial(0, 1); // 実際のピン番号はライブラリ外で管理
+SoftwareSerial mySerial(5, 6); // 実際のピン番号はライブラリ外で管理
 LSI lsi(mySerial);
 
 void setup() {
