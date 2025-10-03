@@ -1,0 +1,49 @@
+#include <SoftwareSerial.h>
+SoftwareSerial mySerial(10, 11); // RX, TX
+
+void setup() {
+  mySerial.begin(9600);  // 音声合成LSIのボーレート
+}
+
+void loop() {
+  // 例として3つのメッセージを順番に発声
+  hatuonn("chidorinochi/yoshinonoyo/uenonou/fujisannofu/choofu");
+  delay(1000);  // 発声間隔
+}
+
+// -----------------------------
+// 文字列を渡すと音声合成LSIで発声する関数
+// -----------------------------
+void hatuonn(String msg) {
+  String segment = "";
+  for (int i = 0; i < msg.length(); i++) {
+    char c = msg[i];
+    if (c == '/') {
+      // 区切り文字に達したら今までの文字列を送信
+      sendToLSI(segment);
+      segment = ""; // 次の区間に備える
+    } else {
+      segment += c;
+    }
+  }
+
+  // 最後の区間を送信
+  if (segment.length() > 0) sendToLSI(segment);
+}
+
+// LSIに文字列を送信して発声完了を待つ
+void sendToLSI(String s) {
+  mySerial.print(s);
+  mySerial.print("\r"); // 改行で送信完了
+
+  // 発声準備完了を待つ
+  while (true) {
+    if (mySerial.available() > 0) {
+      char c = mySerial.read();
+      if (c == '>') break;
+    }
+    delay(5);
+  }
+}
+
+//https://www.petitmonte.com/robot/howto_atp3012_first.html

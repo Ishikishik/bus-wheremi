@@ -1,0 +1,35 @@
+#include <Wire.h>
+
+// デバイスアドレス(スレーブ)
+uint8_t DEVICE_ADDRESS = 0x2E;
+
+void setup() {
+  Wire.begin();  // マスタとしてI2Cバスに接続
+}
+
+// 文字列をデバイスに送って発声させる関数
+void hatuonn(String msg) {
+  // 文字列を送信
+  Wire.beginTransmission(DEVICE_ADDRESS);
+  for (int i = 0; i < msg.length(); i++) {
+    Wire.write(msg[i]);
+  }
+  Wire.endTransmission();
+
+  // デバイスが「次の発声準備OK」になるまで待機
+  while (true) {
+    Wire.requestFrom(DEVICE_ADDRESS, 1);
+    while (Wire.available() == 0) {}
+    uint8_t c = Wire.read();
+    if (c == '>') break;
+    delay(10);
+  }
+}
+
+void loop() {
+  // 例: 1秒ごとに順番に発声させる
+  hatuonn("chidorinochi/yoshinonoyo.\r");
+  delay(1000);
+}
+
+//https://www.petitmonte.com/robot/howto_atp3012_ic2.html
