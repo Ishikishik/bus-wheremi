@@ -1,8 +1,9 @@
-#ifndef MY_LSI_H
-#define MY_LSI_H
+#ifndef MY_LIBRARY_H
+#define MY_LIBRARY_H
 
 #include <Arduino.h>
 #include <SoftwareSerial.h>
+#include <WiFi.h>
 
 class LSI {
 public:
@@ -19,6 +20,11 @@ private:
     SoftwareSerial& mySerial;
 
     void sendToLSI(String s);
+};
+
+class WiFiManager {
+public:
+    void setupWiFi(const char* ssid, const char* pass);
 };
 
 #endif

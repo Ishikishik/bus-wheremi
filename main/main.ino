@@ -5,13 +5,11 @@
 // SoftwareSerialのインスタンス作成
 SoftwareSerial mySerial(5, 6); // 実際のピン番号はライブラリ外で管理
 LSI lsi(mySerial);
+WiFiManager wifi; 
 
 void setup() {
-    Serial.begin(115200);
-    delay(1000);
-    Serial.println("LSI test start");
-
     lsi.begin(9600);
+    wifi.setupWiFi("SSID", "PASS");
 }
 
 void loop() {
