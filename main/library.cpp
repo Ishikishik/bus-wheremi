@@ -1,5 +1,13 @@
 #include "library.hpp"
 
+void WiFiManager::setupWiFi(const char* ssid, const char* pass) {
+    WiFi.begin(ssid, pass);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+    }
+}
+
+
 LSI::LSI(SoftwareSerial& serial) : mySerial(serial) {}
 
 void LSI::begin(long baudrate) {
