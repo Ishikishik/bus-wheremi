@@ -4,16 +4,17 @@
 // -----------------------------
 // ソフトウェアUART
 // -----------------------------
-SoftwareSerial gpsSerial(0, 1);   // GPSモジュール用
-SoftwareSerial lsiSerial(6, 5);   // LSI音声合成用
+SoftwareSerial gpsSerial(5, 6);   // GPSモジュール用
+SoftwareSerial lsiSerial(0, 1);   // LSI音声合成用
 
 TinyGPSPlus gps;
-float lat = 0.0;
-float lng = 0.0;
 
 // -----------------------------
 // LSI用関数
 // -----------------------------
+void lsiBegin(long baudrate = 9600) {
+  lsiSerial.begin(baudrate);
+}
 
 void sendToLSI(String s) {
   lsiSerial.print(s);
@@ -68,43 +69,39 @@ String convertNumberString(String numStr) {
   return result;
 }
 
-bool getGPS(float &lat, float &lng) {
-  while (gpsSerial.available() > 0) {
-    gps.encode(gpsSerial.read());
-  }
-
-  if (gps.location.isUpdated()) {
-    lat = gps.location.lat();
-    lng = gps.location.lng();
-    return true;
-  }
-  return false;
-}
-
-
-
 // -----------------------------
 // Arduino setup/loop
 // -----------------------------
 void setup() {
+  Serial.begin(115200);
   gpsSerial.begin(9600);
-  lsiSerial.begin(9600);
+  lsiBegin(9600);
+  Serial.println("GPS + LSI test start");
 }
 
 void loop() {
-  if (getGPS(lat, lng)) {
-    String latStr = String(lat, 6);
-    String lngStr = String(lng, 6);
-    String speechLat = "idoha " + convertNumberString(latStr) + " desu";
-    String speechLng = "keidoha " + convertNumberString(lngStr) + " desu";
-    hatuonn(speechLat + "/" + speechLng);
-    lat = 0;
-    lng = 0;
-    delay(2000);  // 発声間隔
+  // GPSデータ受信
+  while (gpsSerial.available() > 0) {
+    gps.encode(gpsSerial.read());
+  }
+
+  // 新しい位置情報があれば発声
+  if (gps.location.isUpdated()) {
+    String latitudeStr = String(gps.location.lat(), 6);
+    String longitudeStr = String(gps.location.lng(), 6);
+
+    String latitudeSpeech = "idoha " + convertNumberString(latitudeStr);
+    String longitudeSpeech = "keidoha " + convertNumberString(longitudeStr);
+
+    hatuonn(latitudeSpeech + "/" + longitudeSpeech);  // /で区切ると順番に発声
+
+    // デバッグ
+    Serial.println(latitudeSpeech);
+    Serial.println(longitudeSpeech);
+
+    delay(1000); // 発声間隔
   }
 }
-
-
 
 /*
 #include <SoftwareSerial.h>
