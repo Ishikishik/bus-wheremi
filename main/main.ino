@@ -1,18 +1,32 @@
+
 #include <Arduino.h>
 #include <SoftwareSerial.h>
+#include <TinyGPS++.h>
 #include "library.hpp"
 
 // SoftwareSerialのインスタンス作成
-SoftwareSerial mySerial(5, 6); // 実際のピン番号はライブラリ外で管理
-LSI lsi(mySerial);
-WiFiManager wifi; 
+SoftwareSerial gpsSerial(0, 1); 
+SoftwareSerial lsiSerial(6, 5);
+
+GPSManager gpsManager(gpsSerial);
+LSI lsi(lsiSerial);
 
 void setup() {
     lsi.begin(9600);
-    wifi.setupWiFi("SSID", "PASS");
+    gpsManager.begin(9600);
+    //wifi.setupWiFi("SSID", "PASS");
 }
 
 void loop() {
-    lsi.hatuonn("chidorinochi/yoshinonoyo/uenonou/fujisannofu/choofu");
-    delay(3000);
+    float lat = 0.0;//getgpsはtruefalseで管理しているので初期化する。
+    float lng = 0.0;
+    if (gpsManager.getGPS(lat, lng)) {
+        String latitudeSpeech = "idoha " + lsi.convertNumberString(String(lat, 6));
+        String longitudeSpeech = "keidoha " + lsi.convertNumberString(String(lng, 6));
+
+        lsi.hatuonn(latitudeSpeech + "/" + longitudeSpeech);
+    }
+
+
+    delay(1000);
 }
