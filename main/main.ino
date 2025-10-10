@@ -3,6 +3,7 @@
 #include <SoftwareSerial.h>
 #include <TinyGPS++.h>
 #include "library.hpp"
+#include "secret.hpp"
 
 // SoftwareSerialのインスタンス作成
 SoftwareSerial gpsSerial(0, 1); 
@@ -11,22 +12,26 @@ SoftwareSerial lsiSerial(6, 5);
 GPSManager gpsManager(gpsSerial);
 LSI lsi(lsiSerial);
 
+NetClient net; 
+
 void setup() {
-    lsi.begin(9600);
+    lsi.lsibegin(9600);
     gpsManager.begin(9600);
-    //wifi.setupWiFi("SSID", "PASS");
+    net.begin(SSID, PASS);
 }
 
 void loop() {
+    
     float lat = 0.0;//getgpsはtruefalseで管理しているので初期化する。
     float lng = 0.0;
     if (gpsManager.getGPS(lat, lng)) {
-        String latitudeSpeech = "idoha " + lsi.convertNumberString(String(lat, 6));
-        String longitudeSpeech = "keidoha " + lsi.convertNumberString(String(lng, 6));
-
-        lsi.hatuonn(latitudeSpeech + "/" + longitudeSpeech);
     }
 
+    String mode = "roma";
+    String response = net.queryAPI(35.656, 139.543, AUTH, mode);
 
-    delay(1000);
+    // LSIで発音
+    lsi.hatuonn(response);
+    delay(5000);
 }
+

@@ -5,28 +5,23 @@
 #include <SoftwareSerial.h>
 #include <TinyGPS++.h>
 #include <WiFi.h>
-
-
-class WiFiManager {
-public:
-    void setupWiFi(const char* ssid, const char* pass);
-};
-
+#include <HTTPClient.h>
+#include "secret.hpp" 
 
 class LSI {
 public:
     // コンストラクタでSoftwareSerialインスタンスを渡す
     LSI(SoftwareSerial& serial);
     // 初期化
-    void begin(long baudrate = 9600);
+    void lsibegin(long baudrate = 9600);
     // 発声させる
     void hatuonn(String msg);
+    void sendToLSI(String s);
     //数字をローマ字に変換する
     String convertNumberString(String numStr);
 
 private:
     SoftwareSerial& lsiSerial;
-    void sendToLSI(String s);
     String numToEnglish(char c);
 };
 
@@ -41,6 +36,14 @@ private:
     TinyGPSPlus gps;
 };
 
+
+class NetClient {
+public:
+    NetClient();
+    void begin(const String &ssid, const String &pass);
+    String queryAPI(float x, float y, const String &auth, const String &mode);
+
+};
 
 
 #endif
