@@ -6,7 +6,7 @@
 #include "secret.hpp"
 
 // SoftwareSerialのインスタンス作成
-SoftwareSerial gpsSerial(0, 1); 
+SoftwareSerial gpsSerial(3, 2); 
 SoftwareSerial lsiSerial(6, 5);
 
 GPSManager gpsManager(gpsSerial);
@@ -24,14 +24,14 @@ void loop() {
     
     float lat = 0.0;//getgpsはtruefalseで管理しているので初期化する。
     float lng = 0.0;
+    String mode = "roma";
     if (gpsManager.getGPS(lat, lng)) {
+        String response = net.queryAPI(lat, lng, AUTH, mode);
+
+        // LSIで発音
+        lsi.hatuonn(response);
+        delay(5000);
     }
 
-    String mode = "roma";
-    String response = net.queryAPI(35.656, 139.543, AUTH, mode);
-
-    // LSIで発音
-    lsi.hatuonn(response);
-    delay(5000);
 }
 

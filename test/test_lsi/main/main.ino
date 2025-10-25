@@ -1,7 +1,7 @@
 #include <SoftwareSerial.h>
 
 // RX=10, TX=11 のソフトウェアUART
-SoftwareSerial mySerial(0, 1);
+SoftwareSerial mySerial(6, 5);
 
 void setup() {
   // ESP32本体のデバッグ用シリアル

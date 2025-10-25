@@ -2,10 +2,128 @@
 #include <TinyGPS++.h>
 
 // -----------------------------
+// ソフトウェアUART設定
+// -----------------------------
+SoftwareSerial gpsSerial(0, 1);  // GPS  RX=3, TX=2
+SoftwareSerial lsiSerial(5, 6);  // LSI  RX=5, TX=6
+
+TinyGPSPlus gps;
+
+// -----------------------------
+// LSI用関数
+// -----------------------------
+void lsiBegin(long baudrate = 9600) {
+  lsiSerial.begin(baudrate);
+}
+
+void sendToLSI(String s) {
+  lsiSerial.listen();  // LSI側を有効化
+  lsiSerial.print(s);
+  lsiSerial.print("\r");
+  
+  // '>' が返るまで待つ
+  unsigned long start = millis();
+  while (millis() - start < 2000) { // タイムアウト2秒
+    if (lsiSerial.available() > 0) {
+      char c = lsiSerial.read();
+      if (c == '>') break;
+    }
+    delay(5);
+  }
+}
+
+void hatuonn(String msg) {
+  lsiSerial.listen();  // LSI側をアクティブに
+  String segment = "";
+  for (int i = 0; i < msg.length(); i++) {
+    char c = msg[i];
+    if (c == '/') {
+      sendToLSI(segment);
+      segment = "";
+      delay(300); // セグメント間に間を入れる
+    } else {
+      segment += c;
+    }
+  }
+  if (segment.length() > 0) sendToLSI(segment);
+}
+
+// -----------------------------
+// 数字をローマ字に変換
+// -----------------------------
+String numToEnglish(char c) {
+  switch (c) {
+    case '0': return "zero";
+    case '1': return "ichi";
+    case '2': return "ni";
+    case '3': return "san";
+    case '4': return "yon";
+    case '5': return "go";
+    case '6': return "roku";
+    case '7': return "nana";
+    case '8': return "hachi";
+    case '9': return "kyu";
+    case '.': return "ten";      // 小数点
+    case '-': return "mainasu";  // 負数対応
+    default: return "";
+  }
+}
+
+String convertNumberString(String numStr) {
+  String result = "";
+  for (int i = 0; i < numStr.length(); i++) {
+    result += numToEnglish(numStr[i]);
+  }
+  return result;
+}
+
+// -----------------------------
+// Arduino setup/loop
+// -----------------------------
+void setup() {
+  gpsSerial.begin(9600);
+  lsiBegin(9600);
+  hatuonn("kaishishimasu");
+}
+
+void loop() {
+  gpsSerial.listen(); // GPS側をアクティブに
+
+  // GPSデータ受信
+  while (gpsSerial.available() > 0) {
+    gps.encode(gpsSerial.read());
+  }
+
+  // 新しい位置情報があれば発声
+  if (gps.location.isUpdated()) {
+    float lat = gps.location.lat();
+    float lng = gps.location.lng();
+
+    String latitudeStr = String(lat, 6);
+    String longitudeStr = String(lng, 6);
+
+    String latitudeSpeech = "idoha " + convertNumberString(latitudeStr);
+    String longitudeSpeech = "keidoha " + convertNumberString(longitudeStr);
+
+    // GPS読み取り停止 → LSI発声モードへ
+    //hatuonn(latitudeSpeech + "/" + longitudeSpeech);
+    hatuonn(latitudeSpeech);
+    delay(3000);
+    hatuonn(longitudeSpeech);
+
+    delay(5000); // 発声後に3秒休む
+  }
+}
+
+/*
+#include <SoftwareSerial.h>
+#include <TinyGPS++.h>
+
+// -----------------------------
 // ソフトウェアUART
 // -----------------------------
-SoftwareSerial gpsSerial(5, 6);   // GPSモジュール用
-SoftwareSerial lsiSerial(0, 1);   // LSI音声合成用
+SoftwareSerial gpsSerial(3, 2); 
+SoftwareSerial lsiSerial(5, 6);
 
 TinyGPSPlus gps;
 
@@ -73,10 +191,9 @@ String convertNumberString(String numStr) {
 // Arduino setup/loop
 // -----------------------------
 void setup() {
-  Serial.begin(115200);
   gpsSerial.begin(9600);
   lsiBegin(9600);
-  Serial.println("GPS + LSI test start");
+  hatuonn("kaishishimasu");
 }
 
 void loop() {
@@ -95,14 +212,10 @@ void loop() {
 
     hatuonn(latitudeSpeech + "/" + longitudeSpeech);  // /で区切ると順番に発声
 
-    // デバッグ
-    Serial.println(latitudeSpeech);
-    Serial.println(longitudeSpeech);
-
     delay(1000); // 発声間隔
   }
 }
-
+*/
 /*
 #include <SoftwareSerial.h>
 
